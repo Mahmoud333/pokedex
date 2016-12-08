@@ -10,10 +10,10 @@ import Foundation
 
 class Pokemon {
     
-    private var _name: String!
-    private var _pokedexId: Int!
+    fileprivate var _name: String!
+    fileprivate var _pokedexId: Int!
     
-    var pokeName: String {
+    var name: String {
         if _name == nil { _name = "" }
         return _name
     }
