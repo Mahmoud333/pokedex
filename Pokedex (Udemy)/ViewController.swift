@@ -9,12 +9,18 @@
 import UIKit
 import AVFoundation    //since we are woring with audio
 
-class ViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+class ViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UISearchBarDelegate {
 
 
     @IBOutlet weak var collection: UICollectionView!
     
+    @IBOutlet weak var searchBar: UISearchBar! //anytime u type anything we filter the results
+    
     var pokemonss = [Pokemon]()
+    //var displayedPokemons = [Pokemon]()
+    var filteredPokemonss = [Pokemon]()
+    var inSearchMode = false
+    
     var musicPlayer: AVAudioPlayer! //musicPlayer variable
     
     override func viewDidLoad() {
@@ -22,6 +28,9 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
 
         collection.delegate = self
         collection.dataSource = self
+        searchBar.delegate = self
+        
+        searchBar.returnKeyType = UIReturnKeyType.done //change search button to done button
         
         parsePokemonCSV()
         initAudio()
@@ -36,6 +45,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
             
             musicPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
             musicPlayer.numberOfLoops = -1 //infinity
+            musicPlayer.volume = 0.4
             musicPlayer.prepareToPlay()
             musicPlayer.play()
             
@@ -67,7 +77,6 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
                 pokemonss.append(poke)
             }
             
-            
         } catch let error as NSError {
             print(error.debugDescription)
         }
@@ -83,7 +92,15 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
             //let Ivvysour = Pokemon(name: "Ivvysour", pokedexId: 2)
             //let pokemon = Pokemon(name: "Pokemon", pokedexId: indexPath.row)
             
-            let pokemon = pokemonss[indexPath.row]
+            //let pokemon = pokemonss[indexPath.row]
+            //let pokemon = displayedPokemons[indexPath.row]
+            
+            let pokemon: Pokemon!
+            if inSearchMode == false {
+                pokemon = pokemonss[indexPath.row]
+            } else {
+                pokemon = filteredPokemonss[indexPath.row]
+            }
             
             cell.configureCell(pokemon)
             return cell
@@ -94,12 +111,38 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         //did select
         
+        var pokemon: Pokemon!
+        
+        if inSearchMode == false {
+            pokemon = pokemonss[indexPath.row] //original
+        } else {
+            pokemon = filteredPokemonss[indexPath.row] //filtered
+        }
+        
+        performSegue(withIdentifier: "PokemonDetailVC", sender: pokemon)
+        //sending our poke
     }
 
+    //set data to be passed between two controllers
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "PokemonDetailVC" {
+            if let PokeDVC = segue.destination as? PokemonDetailVC {
+                if let pokemon = sender as? Pokemon { //saying poke is the sender of type Pokemon
+                    PokeDVC.pokemon = pokemon
+                }
+            }
+        }
+        
+    }
+
+    
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         //returns how many items in collection view
+        //return displayedPokemons.count
         
-        return pokemonss.count
+        if inSearchMode == false { return pokemonss.count }
+        else { return filteredPokemonss.count }
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -123,5 +166,44 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         }
     }
     
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        view.endEditing(true)
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        //anytime we make keystroke in search bar whatever is here is going to be called
+        
+        //compare text with the pokemons names
+        if searchBar.text == nil || searchBar.text == "" {
+            
+            //displayedPokemons = pokemonss
+            inSearchMode = false
+            collection.reloadData()
+            view.endEditing(true) //the keyboard will go away at that point
+        } else {
+           
+            inSearchMode = true
+            
+            var lower = searchBar.text!.lowercased() //"!" because we checked its not nill
+            
+            filteredPokemonss = pokemonss.filter({ $0.name.range(of: lower) != nil })
+            //filtertedPokemon array is equal to pokemonss array but filtered, we filter it by taking $0 and $0 can be thought of as placeholder for any and all of the objects in the pokemonss array "saying each object which is $0" we are taking the name value of that and we are saying is what we put in search bar contained inside of that name, and if it is then we're going to put that into the filteredpokemonss array
+            //we're creating a filter list from the original list of pokemons & we're filtering it based on whether the search bar text is included in the range of the original name and the $0 is just a placeholder for each item in that array
+            
+            //then after filtering
+            collection.reloadData()
+            
+            /*
+            for poke in pokemonss {
+                if poke.name == searchBar.text?.capitalized {
+                    filteredPokemons.append(poke)
+                    print("found one")
+                }
+            }
+            displayedPokemons = searchedPokemons
+            */
+        }
+    
+    }
 }
 
