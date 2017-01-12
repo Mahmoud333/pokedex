@@ -5,6 +5,7 @@
 
 import Foundation
 
+// For The CSV file text we have..
 open class CSV {
     open var headers: [String] = []
     open var rows: [Dictionary<String, String>] = []

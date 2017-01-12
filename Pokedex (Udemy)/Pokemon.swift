@@ -96,6 +96,7 @@ class Pokemon {
     }
     //we don't want to make 718 network calls right off the bat that would be too manyso we will whenever we click on one of the pokemon and we go to detail controller its then we make network call and pull down the data "Called Lazy Loading" might take 0.5~1.0 sec
     
+    
     //asynchronous meaning we don't know when they are completed so in PokemonDVC we can just start setting the labels to those variables because it would crash bec. those aren't immediatley available on ViewDidLoad
     //what we want to do have a way  let VC know when that data will be available and we are gonna do it with the closure
     func downloadPokemonDetails(completed: @escaping DownloadComplete) {
@@ -108,15 +109,12 @@ class Pokemon {
                 if let weight = dict["weight"] as? String {
                     self._weight = weight
                 }
-                
                 if let height = dict["height"] as? String {
                     self._height = height
                 }
-            
                 if let attack = dict["attack"] as? Int {
                     self._attack = "\(attack)"
                 }
-                
                 if let defense = dict["defense"] as? Int {
                     self._defense = "\(defense)"
                 }
